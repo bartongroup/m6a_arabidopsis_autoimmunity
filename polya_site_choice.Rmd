@@ -1,0 +1,50 @@
+---
+title: "PolyA site choice"
+---
+```{r}
+library(ggplot2)
+library(data.table)
+```
+
+Changes in polyA site choice changes in vir1 at different temperatures
+```{r}
+vir1_low <- read.table("vir1_low_vs_col0_low.apa_results.bed")
+vir1_high <- read.table("vir1_high_vs_col0_high.apa_results.bed")
+```
+Add results header
+```{r}
+results_header <- c("chrom","start","end","gene_id","score","strand","wass_dist","wass_dir","wass_pval","wass_fdr","nreads_cntrl","nreads_treat")
+colnames(vir1_low) <- colnames(vir1_high) <- results_header
+vir1_low.filter <- vir1_low[which(vir1_low$wass_dist > 25 & vir1_low$wass_fdr < 0.05),]
+vir1_high.filter <- vir1_high[which(vir1_high$wass_dist > 25 & vir1_high$wass_fdr < 0.05),]
+```
+
+Plot the shifts in poly(A) site choice
+```{r}
+vir1_low_plot <- ggplot(vir1_low.filter, aes(x=wass_dir))+
+    scale_x_continuous(limits = c(-250,250), expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    geom_area(aes(x=X,y=Y),data=data.frame(X=c(-250,0), Y = 400),alpha=0.3,fill="darkorange")+
+    geom_area(aes(x=X,y=Y),data=data.frame(X=c(0,250), Y = 400),alpha=0.3,fill="darkgreen")+
+    geom_histogram(fill = "#0072B2", colour="white", bins=30)+
+    theme_classic(base_size=15)+
+    ylab("frequency")+
+    xlab("Wasserstein distance")+
+        geom_vline(xintercept=0,linetype="dashed")
+
+vir1_low_plot
+```
+```{r}
+vir1_high_plot <- ggplot(vir1_high.filter, aes(x=wass_dir))+
+    scale_x_continuous(limits = c(-250,250), expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    geom_area(aes(x=X,y=Y),data=data.frame(X=c(-250,0), Y = 400),alpha=0.3,fill="darkorange")+
+    geom_area(aes(x=X,y=Y),data=data.frame(X=c(0,250), Y = 400),alpha=0.3,fill="darkgreen")+
+    geom_histogram(fill = "#D55E00", colour="white", bins=30)+
+    theme_classic(base_size=15)+
+    ylab("frequency")+
+    xlab("Wasserstein distance")+
+        geom_vline(xintercept=0,linetype="dashed")
+
+vir1_high_plot
+```

@@ -1,0 +1,147 @@
+---
+title: "Change in mean poly(A) tail lengths"
+---
+
+```{r}
+library(ggplot2)
+library(data.table)
+library(stringr)
+library(ggpubr)
+```
+
+```{r}
+vir_low_vs_col0_low <- fread("vir1_low_vs_col0_low.tsv")
+vir_high_vs_col0_high <- fread("vir1_high_vs_col0_high.tsv")
+col_low_vs_col0_high <- fread("col0_low_vs_col0_high.tsv")
+```
+```{r}
+nrow(vir_low_vs_col0_low[vir_low_vs_col0_low$fdr < 0.05 & vir_low_vs_col0_low$wass_dir <0])
+nrow(vir_low_vs_col0_low[vir_low_vs_col0_low$fdr < 0.05 & vir_low_vs_col0_low$wass_dir >0])
+plot1 <- ggplot(vir_low_vs_col0_low[vir_low_vs_col0_low$fdr < 0.05], aes(x=wass_dir)) +
+    geom_histogram(colour="white",bins=50, fill="#0072B2")+
+    xlim(-100,100)+
+    scale_y_continuous(expand = c(0, 0), limits = c(0, 2000)) +
+    theme_classic(base_size=12)+
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+    xlab("Difference in mean poly(A) tail length")+
+    ylab("Genes")
+
+plot1
+```
+
+```{r}
+nrow(vir_high_vs_col0_high[vir_high_vs_col0_high$fdr < 0.05 & vir_high_vs_col0_high$wass_dir <0])
+nrow(vir_high_vs_col0_high[vir_high_vs_col0_high$fdr < 0.05 & vir_high_vs_col0_high$wass_dir >0])
+
+plot2 <- ggplot(vir_high_vs_col0_high[vir_high_vs_col0_high$fdr < 0.05], aes(x=wass_dir)) +
+    geom_histogram(colour="white",bins=50, fill="#D55E00")+
+    xlim(-100,100)+
+    scale_y_continuous(expand = c(0, 0), limits = c(0, 2000)) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+    theme_classic(base_size=12)+
+    xlab("Difference in mean poly(A) tail length")+
+    ylab("Genes")
+
+plot2
+```
+
+```{r}
+fig <- ggarrange(plot1, plot2,
+          labels = c("17C", "27C"),
+          ncol = 2, nrow = 1)
+
+fig
+```
+
+Save plots to output
+```{r}
+setwd("/Users/CMetheringham001/Documents/m6A_Autoimmunity/Figures/Figure7")
+pdf(file = "polya_difference.pdf",  
+    width = 8, # The width of the plot in inches
+    height = 4)
+fig
+dev.off()
+```
+
+Do we see changes in Col-0?
+```{r}
+nrow(col_low_vs_col0_high[col_low_vs_col0_high$fdr < 0.05 & col_low_vs_col0_high$wass_dir <0])
+nrow(col_low_vs_col0_high[col_low_vs_col0_high$fdr < 0.05 & col_low_vs_col0_high$wass_dir >0])
+
+plot3 <- ggplot(col_low_vs_col0_high[col_low_vs_col0_high$fdr < 0.05], aes(x=wass_dir)) +
+    geom_histogram(colour="white",bins=50, fill="darkgreen")+
+    xlim(-100,100)+
+    scale_y_continuous(expand = c(0, 0), limits = c(0, 2000)) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+    theme_classic(base_size=12)+
+    xlab("Difference in mean poly(A) tail length")+
+    ylab("Genes")
+
+plot3
+```
+Plot all 3 together
+```{r}
+library(ggpubr)
+library(ggplot2)
+
+# Example annotation for plot1
+plot1 <- plot1 + ggtitle(expression("17ºC:" * italic(vir-1) * " vs Col-0"))
+plot2 <- plot2 + ggtitle(expression("27ºC: " * italic(vir-1) * " vs Col-0"))
+plot3 <- plot3 + ggtitle("Col-0: 17ºC vs 27ºC")
+
+# Arrange the plots without labels
+fig2 <- ggarrange(
+  plot1, plot2, plot3,
+  ncol = 3, nrow = 1
+)
+
+
+fig2
+```
+Are they the same genes?
+
+```{r}
+compare_both <- merge(vir_low_vs_col0_low, vir_high_vs_col0_high, by = 'gene_id')
+ggplot(data = compare_both, aes(x = wass_dir.x, y = wass_dir.y))+
+    geom_bin_2d(bins=50) +
+    theme_classic(base_size=12)+
+    geom_smooth(method = "lm", colour = "red", se = FALSE) +
+    geom_hline(yintercept = 0, colour = "orange", linetype = "dashed")+
+    geom_vline(xintercept = 0, colour = "orange", linetype = "dashed")+
+    xlab("Difference in mean poly(A) tail length - 17ºC")+
+    ylab("Difference in mean poly(A) tail length - 27ºC")
+cor.test(compare_both$wass_dir.x, compare_both$wass_dir.y)
+```
+Overlap of significant changes
+```{r}
+nrow(compare_both[compare_both$pval.x<0.05 & compare_both$pval.y<0.05,])
+```
+Changes in polyA and changers in expression
+```{r}
+vir_vs_col0_17 <- read_delim("~/Documents/m6A_Autoimmunity/Expression/vir1_low_vs_col0_low.GLM.edgeR.DE_results_RENAMED", delim = "\t", escape_double = FALSE, trim_ws = TRUE)
+polyA_change_17 <- compare_both <- merge(vir_low_vs_col0_low, vir_vs_col0_17, by.x = 'gene_id', by.y = 'gene')
+vir_vs_col0_27 <- read_delim("~/Documents/m6A_Autoimmunity/Expression/vir1_high_vs_col0_high.GLM.edgeR.DE_results_RENAMED", delim = "\t", escape_double = FALSE, trim_ws = TRUE)
+polyA_change_27 <- compare_both <- merge(vir_high_vs_col0_high, vir_vs_col0_27, by.x = 'gene_id', by.y = 'gene')
+```
+```{r}
+ggplot(data = polyA_change_17, aes(x = wass_dir, y = logFC))+
+    geom_bin_2d(bins=50) +
+    theme_classic(base_size=12)+
+    geom_smooth(method = "lm", colour = "red", se = FALSE) +
+    geom_hline(yintercept = 0, colour = "orange", linetype = "dashed")+
+    geom_vline(xintercept = 0, colour = "orange", linetype = "dashed")+
+    xlab("Difference in mean poly(A) tail length - 17ºC")+
+    ylab("logFC in expression vir-1 vs Col-0 - 17ºC")
+cor.test(polyA_change_17$wass_dir, polyA_change_17$logFC)
+```
+```{r}
+ggplot(data = polyA_change_27, aes(x = wass_dir, y = logFC))+
+    geom_bin_2d(bins=50) +
+    theme_classic(base_size=12)+
+    geom_smooth(method = "lm", colour = "red", se = FALSE) +
+    geom_hline(yintercept = 0, colour = "orange", linetype = "dashed")+
+    geom_vline(xintercept = 0, colour = "orange", linetype = "dashed")+
+    xlab("Difference in mean poly(A) tail length - 27ºC")+
+    ylab("logFC in expression vir-1 vs Col-0 - 27ºC")
+cor.test(polyA_change_27$wass_dir, polyA_change_27$logFC)
+```

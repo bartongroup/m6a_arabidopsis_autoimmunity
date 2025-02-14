@@ -1,0 +1,198 @@
+---
+title: "PolyA tails in vir 1 at 17 and 27"
+---
+Load the required modules
+```{r}
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(reshape2)
+```
+Load in the polyA tail lengths
+```{r}
+col0_high_1 <- read.delim("col0_high_1_reads_poly_A.gene.txt")
+col0_high_2 <- read.delim("col0_high_2_reads_poly_A.gene.txt")
+col0_high_3 <- read.delim("col0_high_3_reads_poly_A.gene.txt")
+col0_high_4 <- read.delim("col0_high_4_reads_poly_A.gene.txt")
+col0_low_1 <- read.delim("col0_low_1_reads_poly_A.gene.txt")
+col0_low_2 <- read.delim("col0_low_2_reads_poly_A.gene.txt")
+col0_low_3 <- read.delim("col0_low_3_reads_poly_A.gene.txt")
+col0_low_4 <- read.delim("col0_low_4_reads_poly_A.gene.txt")
+```
+
+```{r}
+vir1_high_1 <- read.delim("vir1_high_1_reads_poly_A.gene.txt")
+vir1_high_2 <- read.delim("vir1_high_2_reads_poly_A.gene.txt")
+vir1_high_3 <- read.delim("vir1_high_3_reads_poly_A.gene.txt")
+vir1_high_4 <- read.delim("vir1_high_4_reads_poly_A.gene.txt")
+vir1_low_2 <- read.delim("vir1_low_2_reads_poly_A.gene.txt")
+vir1_low_3 <- read.delim("vir1_low_3_reads_poly_A.gene.txt")
+vir1_low_4 <- read.delim("vir1_low_4_reads_poly_A.gene.txt")
+```
+```{r}
+polya <- rbind(data.frame(geno = "col0", temp = "27", rep = 1, col0_high_1),
+               data.frame(geno = "col0", temp = "27", rep = 2, col0_high_2),
+               data.frame(geno = "col0", temp = "27", rep = 3, col0_high_3),
+               data.frame(geno = "col0", temp = "27", rep = 4, col0_high_4),
+               data.frame(geno = "vir1", temp = "27", rep = 1, vir1_high_1),
+               data.frame(geno = "vir1", temp = "27", rep = 2, vir1_high_2),
+               data.frame(geno = "vir1", temp = "27", rep = 3, vir1_high_3),
+               data.frame(geno = "vir1", temp = "27", rep = 4, vir1_high_4),
+               data.frame(geno = "col0", temp = "17", rep = 1, col0_low_1),
+               data.frame(geno = "col0", temp = "17", rep = 2, col0_low_2),
+               data.frame(geno = "col0", temp = "17", rep = 3, col0_low_3),
+               data.frame(geno = "col0", temp = "17", rep = 4, col0_low_4),
+               data.frame(geno = "vir1", temp = "17", rep = 2, vir1_low_2),
+               data.frame(geno = "vir1", temp = "17", rep = 3, vir1_low_3),
+               data.frame(geno = "vir1", temp = "17", rep = 4, vir1_low_4))
+```
+
+Load  in the m6A sites
+```{r}
+#Define the the location of the input files
+directory <- "/Volumes/cluster/ggs_lab/cmetheringham001/Readers_Writers/m6Anet/data/m6anet"
+#Probability threshold for inclusion of site
+threshold = 0.9
+#List of col0 m6A files
+col0_files <- c("col0_low_1", "col0_low_2","col0_low_3","col0_low_4",
+                "col0_high_1", "col0_high_2","col0_high_3","col0_high_4")
+#Get the files and filter for sites which pass the probability threshold
+m6a_sites_pass_list <- list()
+for (i in 1:length(col0_files)){
+    file_name <- paste(directory,col0_files[i],"data.site_proba.csv", sep ="/")
+    m6a_sites <- read.csv(file_name)
+    m6a_sites_pass_list[[i]] <- m6a_sites[m6a_sites$probability_modified > threshold,]
+}
+sites_with_m6a <- samples_all <- m6a_sites_pass_list[[1]] %>%
+    full_join(m6a_sites_pass_list[[2]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[3]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[4]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[5]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[6]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[7]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[8]], by = c("transcript_id", "transcript_position", "kmer"))
+```
+Divide polya into w/wo m6a
+```{r}
+polya$m6a <- polya$contig %in% sites_with_m6a$transcript_id
+```
+
+Plot All and facet
+```{r}
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+polya <- polya %>%
+    mutate(geno_temp = interaction(geno, temp, sep = "_"))
+
+polya_density <- ggplot(data = polya, aes(x=tail_length, group = paste(rep, geno), colour = geno_temp))+
+    geom_density()+
+    scale_y_continuous(expand = c(0, 0))+
+    scale_x_continuous(expand = c(0, 0), limits = c(0,200))+
+    theme_classic(base_size=18)+
+    theme(legend.position = c(0.8, 0.9))+
+    theme(legend.title = element_blank())+
+    labs(x = "PolyA tail length", y = "Reads - density")+
+    scale_color_manual(values = custom_colors)
+
+polya_density
+```
+
+
+```{r}
+temp_labels <- c("17°C", "27°C")
+names(temp_labels) <- c(17,27)
+m6a_labels <- c("no modification", "modification")
+names(m6a_labels) <- c(FALSE, TRUE)
+
+polya_density_facet <- polya_density + facet_grid(m6a ~ temp,
+                                                  labeller=labeller(temp = temp_labels, m6a = m6a_labels))+
+    theme(panel.spacing.y = unit(2, "lines"))
+polya_density_facet
+```
+
+
+Plot with dotted lines
+
+```{r}
+# Assuming geno_temp is a predefined column in your original data frame (polya)
+# Create a new variable for interaction of genotype, temperature, and m6a
+polya <- polya %>%
+    mutate(geno_temp_m6a = interaction(geno, temp, m6a, sep = "_"))
+
+# Calculate the median of tail_length for each group (geno_temp_m6a)
+# Ensure geno_temp and m6a are present in medians for coloring the vlines and linetypes
+medians <- polya %>%
+  group_by(geno_temp_m6a) %>%
+  summarise(median_tail_length = median(tail_length)) %>%
+  left_join(select(polya, geno_temp_m6a, geno_temp, m6a) %>% distinct(), by = "geno_temp_m6a")
+
+# Plot with dotted lines at the median, colored by geno_temp and linetype determined by m6a
+polya_density <- ggplot(data = polya, aes(x = tail_length, group = rep, colour = geno_temp)) +
+  geom_density() +
+  # Add a vertical line at the median, colored by geno_temp and linetype based on m6a
+  geom_vline(data = medians, aes(xintercept = median_tail_length, colour = geno_temp, linetype = as.factor(m6a)), 
+             size = 1) +  # Set linetype based on m6a value
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 200)) +
+  theme_classic(base_size = 18) +
+  theme(legend.position = c(0.8, 0.9)) +
+  theme(legend.title = element_blank()) +
+  labs(x = "PolyA tail length", y = "Reads - density") +
+  scale_color_manual(values = custom_colors) +  # Ensure this has your desired color palette
+  scale_linetype_manual(values = c("TRUE" = "solid", "FALSE" = "dotted"))  # Adjust linetype based on m6a (TRUE=solid, FALSE=dotted)
+
+# Display the plot
+polya_density
+```
+
+```{r}
+temp_labels <- c("17°C", "27°C")
+names(temp_labels) <- c(17,27)
+m6a_labels <- c("no modification", "modification")
+names(m6a_labels) <- c(FALSE, TRUE)
+
+polya_density_facet <- polya_density + facet_grid(m6a ~ temp,
+                                                  labeller=labeller(temp = temp_labels, m6a = m6a_labels))+
+    theme(panel.spacing.y = unit(2, "lines"))
+polya_density_facet
+```
+```{r}
+# Assuming geno_temp is a predefined column in your original data frame (polya)
+# Create a new variable for interaction of genotype, temperature, and m6a
+polya <- polya %>%
+    mutate(geno_temp_m6a = interaction(geno, temp, m6a, sep = "_"))
+
+# Calculate the median of tail_length for each group (geno_temp_m6a)
+# Ensure geno_temp is present in medians for coloring the vlines
+medians <- polya %>%
+  group_by(geno_temp_m6a, temp, m6a) %>%
+  summarise(median_tail_length = median(tail_length)) %>%
+  left_join(select(polya, geno_temp_m6a, geno_temp) %>% distinct(), by = "geno_temp_m6a")
+
+# Plot with dotted lines at the median, colored by geno_temp
+polya_density_medians <- ggplot(data = polya, aes(x = tail_length, group = rep, colour = geno_temp_m6a)) +
+  geom_density() +
+  # Add a conditional geom_vline that only plots lines for the correct temp and m6a combinations
+  geom_vline(data = medians, aes(xintercept = median_tail_length, colour = geno_temp), 
+             linetype = "dotted", size = 1) +  # Add dotted line at the median
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 200)) +
+  theme_classic(base_size = 18) +
+  theme(legend.position = c(0.8, 0.9)) +
+  theme(legend.title = element_blank()) +
+  labs(x = "PolyA tail length", y = "Reads - density") +
+  scale_color_manual(values = custom_colors) +
+  # Facet the plot and apply labels
+  facet_grid(m6a ~ temp, labeller = labeller(temp = temp_labels, m6a = m6a_labels)) +
+  theme(panel.spacing.y = unit(2, "lines"))
+
+# Display the plot
+polya_density_medians
+
+```
+
