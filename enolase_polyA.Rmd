@@ -1,0 +1,124 @@
+---
+title: "Plot poly(A) tail length distributions for enolase"
+---
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+Get the list of enolase reads
+```{r}
+col0_17_1.eno <- read.table("data/aligned_data/enolase_reads/col0_low_1.eno.txt", quote="\"", comment.char="")
+col0_17_2.eno <- read.table("data/aligned_data/enolase_reads/col0_low_2.eno.txt", quote="\"", comment.char="")
+col0_17_3.eno <- read.table("data/aligned_data/enolase_reads/col0_low_3.eno.txt", quote="\"", comment.char="")
+col0_17_4.eno <- read.table("data/aligned_data/enolase_reads/col0_low_4.eno.txt", quote="\"", comment.char="")
+```
+```{r}
+col0_27_1.eno <- read.table("data/aligned_data/enolase_reads/col0_high_1.eno.txt", quote="\"", comment.char="")
+col0_27_2.eno <- read.table("data/aligned_data/enolase_reads/col0_high_2.eno.txt", quote="\"", comment.char="")
+col0_27_3.eno <- read.table("data/aligned_data/enolase_reads/col0_high_3.eno.txt", quote="\"", comment.char="")
+col0_27_4.eno <- read.table("data/aligned_data/enolase_reads/col0_high_4.eno.txt", quote="\"", comment.char="")
+```
+```{r}
+vir1_17_2.eno <- read.table("data/aligned_data/enolase_reads/vir1_low_2.eno.txt", quote="\"", comment.char="")
+vir1_17_3.eno <- read.table("data/aligned_data/enolase_reads/vir1_low_3.eno.txt", quote="\"", comment.char="")
+vir1_17_4.eno <- read.table("data/aligned_data/enolase_reads/vir1_low_4.eno.txt", quote="\"", comment.char="")
+```
+```{r}
+vir1_27_1.eno <- read.table("data/aligned_data/enolase_reads/vir1_high_1.eno.txt", quote="\"", comment.char="")
+vir1_27_2.eno <- read.table("data/aligned_data/enolase_reads/vir1_high_2.eno.txt", quote="\"", comment.char="")
+vir1_27_3.eno <- read.table("data/aligned_data/enolase_reads/vir1_high_3.eno.txt", quote="\"", comment.char="")
+vir1_27_4.eno <- read.table("data/aligned_data/enolase_reads/vir1_high_4.eno.txt", quote="\"", comment.char="")
+```
+Get the dorado polyA output
+```{r}
+col0_17_1.polyA <- read.table("col0_low_1_reads_poly_A.txt")
+col0_17_2.polyA <- read.table("col0_low_2_reads_poly_A.txt")
+col0_17_3.polyA <- read.table("col0_low_3_reads_poly_A.txt")
+col0_17_4.polyA <- read.table("col0_low_4_reads_poly_A.txt")
+```
+```{r}
+col0_27_1.polyA <- read.table("col0_high_1_reads_poly_A.txt")
+col0_27_2.polyA <- read.table("col0_high_2_reads_poly_A.txt")
+col0_27_3.polyA <- read.table("col0_high_3_reads_poly_A.txt")
+col0_27_4.polyA <- read.table("col0_high_4_reads_poly_A.txt")
+```
+```{r}
+vir1_17_2.polyA <- read.table("vir1_low_2_reads_poly_A.txt")
+vir1_17_3.polyA <- read.table("vir1_low_3_reads_poly_A.txt")
+vir1_17_4.polyA <- read.table("vir1_low_4_reads_poly_A.txt")
+```
+```{r}
+vir1_27_1.polyA <- read.table("vir1_high_1_reads_poly_A.txt")
+vir1_27_2.polyA <- read.table("vir1_high_2_reads_poly_A.txt")
+vir1_27_3.polyA <- read.table("vir1_high_3_reads_poly_A.txt")
+vir1_27_4.polyA <- read.table("vir1_high_4_reads_poly_A.txt")
+```
+
+Filter the polyA tails
+```{r}
+col0_17_1.polyA.filtered <- col0_17_1.polyA[col0_17_1.polyA$V1 %in% col0_17_1.eno$V1,]
+col0_17_2.polyA.filtered <- col0_17_2.polyA[col0_17_2.polyA$V1 %in% col0_17_2.eno$V1,]
+col0_17_3.polyA.filtered <- col0_17_3.polyA[col0_17_3.polyA$V1 %in% col0_17_3.eno$V1,]
+col0_17_4.polyA.filtered <- col0_17_4.polyA[col0_17_4.polyA$V1 %in% col0_17_4.eno$V1,]
+col0_27_1.polyA.filtered <- col0_27_1.polyA[col0_27_1.polyA$V1 %in% col0_27_1.eno$V1,]
+col0_27_2.polyA.filtered <- col0_27_2.polyA[col0_27_2.polyA$V1 %in% col0_27_2.eno$V1,]
+col0_27_3.polyA.filtered <- col0_27_3.polyA[col0_27_3.polyA$V1 %in% col0_27_3.eno$V1,]
+col0_27_4.polyA.filtered <- col0_27_4.polyA[col0_27_4.polyA$V1 %in% col0_27_4.eno$V1,]
+vir1_17_2.polyA.filtered <- vir1_17_2.polyA[vir1_17_2.polyA$V1 %in% vir1_17_2.eno$V1,]
+vir1_17_3.polyA.filtered <- vir1_17_3.polyA[vir1_17_3.polyA$V1 %in% vir1_17_3.eno$V1,]
+vir1_17_4.polyA.filtered <- vir1_17_4.polyA[vir1_17_4.polyA$V1 %in% vir1_17_4.eno$V1,]
+vir1_27_1.polyA.filtered <- vir1_27_1.polyA[vir1_27_1.polyA$V1 %in% vir1_27_1.eno$V1,]
+vir1_27_2.polyA.filtered <- vir1_27_2.polyA[vir1_27_2.polyA$V1 %in% vir1_27_2.eno$V1,]
+vir1_27_3.polyA.filtered <- vir1_27_3.polyA[vir1_27_3.polyA$V1 %in% vir1_27_3.eno$V1,]
+vir1_27_4.polyA.filtered <- vir1_27_4.polyA[vir1_27_4.polyA$V1 %in% vir1_27_4.eno$V1,]
+```
+
+Join the results
+```{r}
+polya <- rbind(
+      #(data.frame(col0_17_1.polyA.filtered, geno = "col0", temp = "17", rep = 1)),
+      (data.frame(col0_17_2.polyA.filtered, geno = "col0", temp = "17", rep = 2)),
+      (data.frame(col0_17_3.polyA.filtered, geno = "col0", temp = "17", rep = 3)),
+      (data.frame(col0_17_4.polyA.filtered, geno = "col0", temp = "17", rep = 4)),
+      (data.frame(col0_27_1.polyA.filtered, geno = "col0", temp = "27", rep = 1)),
+      (data.frame(col0_27_2.polyA.filtered, geno = "col0", temp = "27", rep = 2)),
+      (data.frame(col0_27_3.polyA.filtered, geno = "col0", temp = "27", rep = 3)),
+      (data.frame(col0_27_4.polyA.filtered, geno = "col0", temp = "27", rep = 4)),
+      (data.frame(vir1_17_2.polyA.filtered, geno = "vir1", temp = "17", rep = 2)),
+      (data.frame(vir1_17_3.polyA.filtered, geno = "vir1", temp = "17", rep = 3)),
+      (data.frame(vir1_17_4.polyA.filtered, geno = "vir1", temp = "17", rep = 4)),
+      (data.frame(vir1_27_1.polyA.filtered, geno = "vir1", temp = "27", rep = 1)),
+      (data.frame(vir1_27_2.polyA.filtered, geno = "vir1", temp = "27", rep = 2)),
+      (data.frame(vir1_27_3.polyA.filtered, geno = "vir1", temp = "27", rep = 3)),
+      (data.frame(vir1_27_4.polyA.filtered, geno = "vir1", temp = "27", rep = 4))
+)
+```
+
+Plot the distribution of poly(A) tails
+```{r}
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+polya <- polya %>%
+    mutate(geno_temp = interaction(geno, temp, sep = "_"))
+
+eno_polya_density <- ggplot(data = polya, 
+                        aes(x = V3, group = paste(rep, geno,temp), colour = geno_temp)) +
+    geom_density() +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 100)) +
+    theme_classic(base_size = 18) +
+    theme(legend.position = c(0.8, 0.7)) +
+    theme(legend.title = element_blank()) +
+    labs(x = "PolyA tail length", y = "Reads - density")+ 
+    scale_color_manual(values = custom_colors)
+
+eno_polya_density
+```
+
+
