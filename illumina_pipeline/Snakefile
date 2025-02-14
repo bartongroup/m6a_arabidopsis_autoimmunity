@@ -1,0 +1,31 @@
+configfile: "config.yaml"
+
+#Pipeline for the detection of differential expression and differential splicing in LUC7 mutants
+#Using data from Wang et al
+#1. FastQC and collation of results with MultiQC
+#2. Alignment of transcripts to reference genome with STAR - index and get stats for output bam files
+#3. Quantification with salmon
+
+include: 'rules/qc.snakefile'
+include: 'rules/star.snakefile'
+include: 'rules/stringtie.snakefile'
+include: 'rules/salmon.snakefile'
+include: 'rules/diff_ex.snakefile'
+include: 'rules/coverage.snakefile'
+
+rule all:
+    input:
+        qc_report = "data/fastqc/report_quality_control.html",
+        star_index = "data/alignments/STAR_index",
+        indexed_bam = expand("data/alignments/{sample}_Aligned.sortedByCoord.out.bam.bai", sample=config["samples"]),
+        bamstats = expand("data/alignments/{sample}_Aligned.sortedByCoord.out.bamstats", sample=config["samples"]),
+        multibam_idx = expand("data/alignments/merged_{cond}.bam.bai", cond = config["conds"]),
+        gtf = expand("data/transcriptome/{cond}.set.gtf", cond = config["conds"]),
+        merged_gtf = "data/transcriptome/stringtie_merged.gtf",
+        fasta = "data/transcriptome/stringtie.fa",
+        quant = expand("data/quant/{sample}/quant.sf", sample=config["samples"]),
+        gene_counts = "data/expression/gene.counts.table",
+        strand_bam = expand("data/alignments/{sample}.genome.{strand}.bam", sample=config["samples"], strand = [1,2]),
+        single_bw = expand("data/coverage_tracks/{sample}.{strand}.bw", sample=config["samples"], strand = [1,2]),
+        cond_bw= expand("data/coverage_tracks/pooled/{cond}.cpm.{strand}.bw", cond = config["conds"], strand = [1,2]),
+        cond_bw_raw= expand("data/coverage_tracks/pooled/{cond}.raw.{strand}.bw", cond = config["conds"], strand = [1,2])
