@@ -11,10 +11,6 @@ include: 'rules/polyA.snakefile'
 include: 'rules/apa.snakefile'
 include: 'rules/m6anet.snakefile'
 
-SAMPLE_NAMES = glob_wildcards('data/raw_data/{sample_name}').sample_name
-CONDS = set([sn.rsplit('_', 1)[0] for sn in SAMPLE_NAMES])
-TEMPS = set([sn.rsplit('_', 1)[1] for sn in SAMPLE_NAMES])
-
 rule all:
     input:
         expand(
