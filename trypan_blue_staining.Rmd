@@ -1,0 +1,71 @@
+---
+title: "Trypan Blue Staining"
+---
+```{r}
+library(readxl)
+library(data.table)
+library(car)
+library(emmeans)
+```
+
+Code required to calculate stats and plot output for quantification of trypan blue staining
+
+```{r}
+table <- read_excel("Table_10_Trypan_blue_imageJ_data.xlsx")
+```
+
+Run 2 way ANOVA and post hoc
+```{r}
+# Convert temperature and genotype to factors
+table$Temperature <- as.factor(table$Temperature)
+table$Genotype <- as.factor(table$Genotype)
+
+# Two-way ANOVA
+anova_result <- aov(`%Area` ~ Temperature * Genotype, data = table)
+summary(anova_result)
+
+# Check assumptions - normality of residuals
+shapiro.test(residuals(anova_result))
+
+# Homogeneity of variances
+leveneTest(`%Area` ~ Temperature * Genotype, data = table)
+
+# Post-hoc test
+emmeans_results <- emmeans(anova_result, pairwise ~ Temperature * Genotype)
+emmeans_results
+```
+
+Plot boxplot
+```{r}
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+table <- table %>%
+    mutate(geno_temp = interaction(Genotype, Temperature, sep = "_"))
+
+dot_And_box <- ggplot(data=table, aes(y= `%Area`, x = paste(Genotype, Temperature), colour = geno_temp, shape = Genotype))+
+    geom_boxplot(colour = "darkgrey")+
+    geom_beeswarm(size = 3, cex = 2)+
+    theme_classic(base_size=12) +
+    scale_x_discrete(labels = c("Col-0 17°C", "Col-0 27°C",expression(italic("vir-1") * "17°C"), expression(italic("vir-1") * "27°C"))) +
+    labs(title = "",
+       x = "Condition",
+       y = "% Leaf Area Stained")+
+    scale_color_manual(values = custom_colors)+
+    scale_shape_manual(
+        values = c("col0" = 16, "vir1" = 17),  # Customize shape types
+        labels = c(
+            "col0" = "Col-0",
+            "vir1" = expression(italic("vir-1"))
+        )
+    )+
+    guides(colour = "none")
+
+dot_And_box
+```
+
