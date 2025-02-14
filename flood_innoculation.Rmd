@@ -1,0 +1,167 @@
+---
+title: "Flood innoculation data"
+---
+
+```{r}
+library(ggplot2)
+library(readxl)
+library(ggbeeswarm)
+library(dplyr)
+library(data.table)
+```
+Import the data and extract experiments
+```{r}
+experiment1 <- read_excel("Table_9_Flood_inoculation_data.xlsx", sheet = 1)
+experiment2 <- read_excel("Table_9_Flood_inoculation_data.xlsx", sheet = 2)
+```
+
+Plot result - main figure
+```{r}
+temp_labels <- c("17°C", "20°C", "27°C")
+names(temp_labels) <- c(17,21,27)
+
+# Create a new variable for interaction of genotype and temperature
+experiment1 <- experiment1 %>%
+    mutate(geno_temp = interaction(genotype, temperature, sep = "_"))
+
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",
+    "col0_21" = "#CC79A7",
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2",
+    "vir1_21" = "#56B4E9",
+    "vir1_27" = "#D55E00",
+    "fls2_17"  = "black",
+    "fls2_21"  = "black",
+    "fls2_27"  = "black" 
+)
+
+day3_plot <- ggplot(data = experiment1, aes(y = `CFU/mg`, x = genotype, group = genotype, colour = geno_temp, shape = genotype))+
+    geom_boxplot(colour = "darkgrey")+
+    geom_beeswarm(size = 2.5, cex = 2)+
+    theme_classic(base_size=14)+
+    scale_y_log10()+
+    labs(title = "",
+       x = "genotype",
+       y = "CFU/mg")+
+    scale_color_manual(values = custom_colors) +  # Apply custom colors
+    scale_shape_manual(
+        values = c("col0" = 16, "vir1" = 17, "fls2" = 18),  # Customize shape types
+        labels = c(
+            "col0" = "Col-0",
+            "vir1" = expression(italic("vir-1")),
+            "fls2" = expression(italic("fls2c"))
+        )
+    ) +
+    guides(colour = "none")
+
+day3_facet <- day3_plot + facet_grid(~ temperature, labeller=labeller(temperature = temp_labels))+
+    scale_x_discrete(
+    "Genotype",
+    labels = c(
+      "col0" = "Col-0",
+      "vir1" = expression(italic("vir-1")),
+      "fls2" = expression(italic("fls2c"))
+    )
+    )
+
+day3_facet
+```
+
+Statistical tests - ANOVA
+```{r}
+model <- aov(`CFU/mg` ~ genotype * temperature, data=experiment1)
+summary(model)
+# Tukey's HSD for the full model (checking all pairwise comparisons)
+TukeyHSD(model)
+```
+One way ANOVA in each genotype
+```{r}
+model_vir <- aov(`CFU/mg` ~ temperature, data = experiment1[experiment1$genotype == "vir1", ])
+summary(model_vir)
+```
+```{r}
+model_fls2 <- aov(`CFU/mg` ~ temperature, data = experiment1[experiment1$genotype == "fls2", ])
+summary(model_fls2)
+```
+```{r}
+model_col0 <- aov(`CFU/mg` ~ temperature, data = experiment1[experiment1$genotype == "col0", ])
+summary(model_col0)
+```
+
+Plot result - Supplementary
+```{r}
+temp_labels <- c("17°C", "20°C", "27°C")
+names(temp_labels) <- c(17,21,27)
+
+# Create a new variable for interaction of genotype and temperature
+experiment2 <- experiment2 %>%
+    mutate(geno_temp = interaction(genotype, temperature, sep = "_"))
+
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",
+    "col0_21" = "#CC79A7",
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2",
+    "vir1_21" = "#56B4E9",
+    "vir1_27" = "#D55E00",
+    "fls2_17"  = "black",
+    "fls2_21"  = "black",
+    "fls2_27"  = "black" 
+)
+
+day3_plot_2 <- ggplot(data = experiment2, aes(y = `CFU/mg`, x = genotype, group = genotype, colour = geno_temp, shape = genotype))+
+    geom_boxplot(colour = "darkgrey")+
+    geom_beeswarm(size = 2.5, cex = 2)+
+    theme_classic(base_size=14)+
+    scale_y_log10()+
+    labs(title = "",
+       x = "genotype",
+       y = "CFU/mg")+
+    scale_color_manual(values = custom_colors) +  # Apply custom colors
+    scale_shape_manual(
+        values = c("col0" = 16, "vir1" = 17, "fls2" = 18),  # Customize shape types
+        labels = c(
+            "col0" = "Col-0",
+            "vir1" = expression(italic("vir-1")),
+            "fls2" = expression(italic("fls2c"))
+        )
+    ) +
+    guides(colour = "none")
+
+day3_facet_2 <- day3_plot_2 + facet_grid(~ temperature, labeller=labeller(temperature = temp_labels))+
+    scale_x_discrete(
+    "Genotype",
+    labels = c(
+      "col0" = "Col-0",
+      "vir1" = expression(italic("vir-1")),
+      "fls2" = expression(italic("fls2c"))
+    )
+    )
+
+day3_facet_2
+```
+
+
+Statistical tests - ANOVA
+```{r}
+model <- aov(`CFU/mg` ~ genotype * temperature, data=experiment2)
+summary(model)
+# Tukey's HSD for the full model (checking all pairwise comparisons)
+TukeyHSD(model)
+```
+One way ANOVA in each genotype
+```{r}
+model_vir <- aov(`CFU/mg` ~ temperature, data = experiment2[experiment2$genotype == "vir1", ])
+summary(model_vir)
+```
+```{r}
+model_fls2 <- aov(`CFU/mg` ~ temperature, data = experiment2[experiment2$genotype == "fls2", ])
+summary(model_fls2)
+```
+```{r}
+model_col0 <- aov(`CFU/mg` ~ temperature, data = experiment2[experiment2$genotype == "col0", ])
+summary(model_col0)
+```
