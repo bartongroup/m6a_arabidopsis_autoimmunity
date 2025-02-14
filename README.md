@@ -1,4 +1,4 @@
-# m6a_arabidopsis_autoimmunity
+# Code supporting 'Disruption of the mRNA m6A writer complex triggers autoimmunity in Arabidopsis'
 
 ## R notebooks
 flood_innoculation.Rmd
