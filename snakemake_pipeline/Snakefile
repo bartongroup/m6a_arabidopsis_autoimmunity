@@ -1,0 +1,41 @@
+configfile: 'config.yaml'
+include: 'rules/mapping.snakefile'
+include: 'rules/transcriptome_mapping.snakefile'
+include: 'rules/quantification.snakefile'
+include: 'rules/qc.snakefile'
+include: 'rules/blobtool.snakefile'
+include: 'rules/nanopolish.snakefile'
+include: 'rules/modifications.snakefile'
+include: 'rules/diff_ex.snakefile'
+include: 'rules/polyA.snakefile'
+include: 'rules/apa.snakefile'
+include: 'rules/m6anet.snakefile'
+
+SAMPLE_NAMES = glob_wildcards('data/raw_data/{sample_name}').sample_name
+CONDS = set([sn.rsplit('_', 1)[0] for sn in SAMPLE_NAMES])
+TEMPS = set([sn.rsplit('_', 1)[1] for sn in SAMPLE_NAMES])
+
+rule all:
+    input:
+        expand(
+            [
+                'data/fastqc/{sample_name}.dna_fastqc.html',
+                'data/aligned_data/{sample_name}.genome.bam',
+                'data/aligned_data/{sample_name}.transcriptome.bamstats',
+                'data/aligned_data/{sample_name}.eno.bamstats',
+                'data/nanopolish/{sample_name}.hdf5',
+                'data/polyA/{sample_name}.polya_tail_length.tsv.gz',
+            ],
+            sample_name=config["samples"]
+        ),
+        'data/fastqc/report_quality_control.html',
+        'data/quantification/gene.counts.table',
+        expand(
+            [
+                'data/polyA/{comp}.tsv',
+                #'data/yanocomp/{comp}.bed',
+                #'data/apa_results/{comp}.apa.bed'
+            ],
+            comp=config["comps"]
+        ),
+        expand('data/coverage_tracks/pooled/{cond}.cpm.1.bw', cond=config["conds"])
