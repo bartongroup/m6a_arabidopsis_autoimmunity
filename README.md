@@ -1,6 +1,6 @@
 # Code supporting 'Disruption of the mRNA m6A writer complex triggers autoimmunity in Arabidopsis'
 
-## Snakemake pipeline
+## Snakemake pipelines
 
 - nanopore_pipeline
 
@@ -8,7 +8,7 @@
 
 - illumina_pipeline
 
-  Pipeline used to QC fastq files, align reads to transcriptome & genome and produce gene counts table.
+  Pipeline used to QC fastq files, align reads to transcriptome & genome, produce gene counts table and calculate coverage for plots
 
 ## R notebooks
 - flood_innoculation.Rmd
@@ -18,5 +18,7 @@
 - trypan_blue_staining.Rmd
   
     Plot the results of typan blue staining as quantified by ImageJ and run ANOVA tests
+
+## Python notebooks
 
 ## Additional Scripts
