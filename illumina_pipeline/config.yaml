@@ -1,0 +1,42 @@
+#Arabidopsis reference genome
+
+gtf: "Araport11_GFF3_genes_transposons.201606.no_chr.gtf"
+gff: "Araport11_GFF3_genes_transposons.current.gff"
+
+
+transcriptome: "Araport11_genes.201606.cdna.fasta"
+genome: "Arabidopsis_thaliana.TAIR10.dna.toplevel.fa"
+
+#Number of core to use for read alignment
+ncore: 4
+conds:
+    - col0_high
+    - col0_low
+    - vir1_high
+    - vir1_low
+
+samples:
+    - col0_high_1
+    - col0_high_2
+    - col0_high_3
+    - col0_high_4
+    - col0_low_1
+    - col0_low_2
+    - col0_low_3
+    - col0_low_4
+    - vir1_high_1
+    - vir1_high_2
+    - vir1_high_3
+    - vir1_high_4
+    - vir1_low_1
+    - vir1_low_2
+    - vir1_low_3
+    - vir1_low_4
+    
+sample_data: data/samples.txt
+
+comps:
+    - vir1_low_vs_col0_low
+    - vir1_high_vs_col0_high
+    - vir1_low_vs_vir1_high
+    - col0_low_vs_col0_high
