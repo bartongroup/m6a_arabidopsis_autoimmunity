@@ -1,0 +1,68 @@
+---
+title: "LC-MS/MS"
+---
+
+Plot the LC-MS/MS results for vir-1 and Col-0 at 17 and 27 degrees
+```{r}
+library(data.table)
+library(ggplot2)
+library(ggbeeswarm)
+```
+
+LC/MS Data
+```{r}
+id <- c("3390","3391", "3392", "3393", "3394", "3395",
+        "3396", "3397", "3398", "3399", "3400", "3401")
+geno <- c("Col-0", "Col-0", "Col-0", "Col-0","Col-0", "Col-0",
+          "vir-1","vir-1","vir-1","vir-1","vir-1","vir-1")
+temp <- c("17","17","17", "27", "27", "27",
+          "17","17","17", "27", "27", "27")
+A <- c(6889928, 6849930, 7261481, 6346521, 5680589, 5014538,
+       5178787, 4438984, 4344181, 3886157, 3995078, 3725550)
+m6A <- c(68705, 65106, 70824, 56735, 50813, 49538,
+         5849, 5394, 5166, 3685, 4286, 3465)
+
+table2 <- data.table(id=id, geno=geno, temp=temp, m6A=m6A, A=A)
+```
+```{r}
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "Col-0_17" = "#009E73",  
+    "Col-0_27" = "#E69F00",  
+    "vir-1_17" = "#0072B2", 
+    "vir-1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+table2 <- table2 %>%
+    mutate(geno_temp = interaction(geno, temp, sep = "_"))
+
+dot_And_box <- ggplot(data=table2, aes(y= m6A/A, x = paste(geno, temp), colour = geno_temp, shape = geno))+
+    geom_boxplot(colour = "darkgrey")+
+    geom_beeswarm(size = 3, cex = 2)+
+    theme_classic(base_size=12) +
+    scale_x_discrete(labels = c("Col-0 17°C", "Col-0 27°C",expression(italic("vir-1") * "17°C"), expression(italic("vir-1") * "27°C"))) +
+    labs(title = "",
+       x = "Condition",
+       y = "m6A/A ratio")+
+    scale_color_manual(values = custom_colors)+
+    scale_shape_manual(
+        values = c("Col-0" = 16, "vir-1" = 17),  # Customize shape types
+        labels = c(
+            "col0" = "Col-0",
+            "vir1" = expression(italic("vir-1"))
+        )
+    )+
+    guides(colour = "none")
+
+dot_And_box
+```
+Calculate stats
+```{r}
+# Convert temperature and genotype to factors
+table2$temp <- as.factor(table2$temp)
+table2$geno <- as.factor(table2$geno)
+
+# Two-way ANOVA
+anova_result <- aov(m6A/A ~ temp * geno, data = table2)
+summary(anova_result)
+```
