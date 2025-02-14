@@ -1,0 +1,64 @@
+---
+title: "QPRC data"
+---
+```{r}
+library(ggplot2)
+```
+
+QPC data for PR1 provided by Anjil
+3 biological replicates with two technical replicates each
+
+Single timepoint measurements for vir1 vs Col0 at 17 and 27 degrees - 2^-∆∆Ct values
+
+```{r}
+#17C : Col-0, vir-1
+t.test(c(0.017277041, 0.025826572,0.02327621), c(0.282241101, 0.299369676, 0.299369676))
+#27C: Col-0, vir-1
+t.test(c(4.1544E-05, 5.81444E-05, 6.0824E-05), c(0.000461942, 0.000468391, 0.000473286))
+```
+qpcr ct values
+```{r}
+qpcr_table <- data_frame(geno = c(rep(c(rep("col0", 3), rep("vir1", 3)),2)),
+                         temp = c(rep(17, 6), rep(27,6)),
+                         ct = c(0.017277041, 0.025826572,0.02327621, 0.282241101, 0.299369676, 0.299369676,
+                                4.1544E-05, 5.81444E-05, 6.0824E-05, 0.000461942, 0.000468391, 0.000473286))
+```
+```{r}
+# Create a new variable for interaction of genotype and temperature
+qpcr_table <- qpcr_table %>%
+    mutate(geno_temp = interaction(geno, temp, sep = "_"))
+
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+
+# Create the plot
+qpcr_plot <- ggplot(data = qpcr_table, aes(y = ct, x = geno, group = geno, colour = geno_temp)) +
+    geom_boxplot(colour = "darkgrey") +
+    geom_beeswarm(size = 3, cex = 2) +
+    theme_classic(base_size = 16) +
+    theme(legend.position = "none") +
+    labs(y = expression(paste("Relative expression of PR1 (", "2"^"-∆∆Ct", ")"))) +
+    scale_color_manual(values = custom_colors) # Apply custom colors
+
+# Define custom labels for the facets
+temp_labels <- c("17°C", "27°C")
+names(temp_labels) <- c(17, 27)
+
+# Add facets and custom x-axis labels
+qpcr_plot_facet <- qpcr_plot + 
+    facet_grid(~ temp, labeller = labeller(temp = temp_labels)) +
+    scale_x_discrete(
+        "Genotype",
+        labels = c(
+            "col0" = "Col-0",
+            "vir1" = expression(italic("vir-1"))
+        )
+    )
+qpcr_plot_facet
+```
+
