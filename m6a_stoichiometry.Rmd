@@ -1,0 +1,206 @@
+---
+title: "m6A Stoichiometry"
+---
+
+M6anet results - sites
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(reshape2)
+library(tidyr)
+library(data.table)
+```
+
+
+```{r}
+#Define the the location of the input files
+directory <- "data/m6anet"
+#Probability threshold for inclusion of site
+threshold = 0.9
+#List of col0 m6A files
+col0_files <- c("col0_low_1", "col0_low_2","col0_low_3","col0_low_4",
+                "col0_high_1", "col0_high_2","col0_high_3","col0_high_4",
+                "vir1_low_2","vir1_low_3","vir1_low_4",
+                "vir1_high_1", "vir1_high_2","vir1_high_3","vir1_high_4")
+
+#Get the files and filter for sites which pass the probability threshold
+m6a_sites_pass_list <- list()
+for (i in 1:length(col0_files)){
+    file_name <- paste(directory,col0_files[i],"data.site_proba.csv", sep ="/")
+    m6a_sites <- read.csv(file_name)
+    m6a_sites_pass_list[[i]] <- m6a_sites[m6a_sites$probability_modified > threshold,]
+}
+```
+
+
+```{r}
+samples_all <- m6a_sites_pass_list[[1]] %>%
+    full_join(m6a_sites_pass_list[[2]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[3]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[4]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[5]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[6]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[7]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[8]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[9]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[10]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[11]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[12]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[13]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[14]], by = c("transcript_id", "transcript_position", "kmer")) %>%
+    full_join(m6a_sites_pass_list[[15]], by = c("transcript_id", "transcript_position", "kmer")) 
+
+colnames(samples_all) <- c("transcript_id", "transcript_position",
+                           "n_reads.col0_low_1", "probability_modified.col0_low_1", "kmer", "mod_ratio.col0_low_1",
+                           "n_reads.col0_low_2", "probability_modified.col0_low_2", "mod_ratio.col0_low_2",
+                           "n_reads.col0_low_3", "probability_modified.col0_low_3", "mod_ratio.col0_low_3", 
+                           "n_reads.col0_low_4", "probability_modified.col0_low_4", "mod_ratio.col0_low_4",
+                           "n_reads.col0_high_1", "probability_modified.col0_high_1", "mod_ratio.col0_high_1",
+                           "n_reads.col0_high_2", "probability_modified.col0_high_2", "mod_ratio.col0_high_2",
+                           "n_reads.col0_high_3", "probability_modified.col0_high_3", "mod_ratio.col0_high_3",
+                           "n_reads.col0_high_4", "probability_modified.col0_high_4", "mod_ratio.col0_high_4",
+                           "n_reads.vir1_low_2", "probability_modified.vir1_low_2", "mod_ratio.vir1_low_2",
+                           "n_reads.vir1_low_3", "probability_modified.vir1_low_3", "mod_ratio.vir1_low_3",
+                           "n_reads.vir1_low_4", "probability_modified.vir1_low_4", "mod_ratio.vir1_low_4",
+                           "n_reads.vir1_high_1", "probability_modified.vir1_high_1", "mod_ratio.vir1_high_1",
+                           "n_reads.vir1_high_2", "probability_modified.vir1_high_2", "mod_ratio.vir1_high_2",
+                           "n_reads.vir1_high_3", "probability_modified.vir1_high_3", "mod_ratio.vir1_high_3",
+                           "n_reads.vir1_high_4", "probability_modified.vir1_high_4", "mod_ratio.vir1_high_4")
+```
+Sites which have predicted m6A in col0
+```{r}
+col0.sites <- samples_all[!is.na(samples_all$mod_ratio.col0_high_1) | !is.na(samples_all$mod_ratio.col0_high_2) |
+                          !is.na(samples_all$mod_ratio.col0_high_3) | !is.na(samples_all$mod_ratio.col0_high_4) | !is.na(samples_all$mod_ratio.col0_low_1) |
+                          !is.na(samples_all$mod_ratio.col0_low_2) | !is.na(samples_all$mod_ratio.col0_low_3) | !is.na(samples_all$mod_ratio.col0_low_4),]
+```
+
+Subset the coulmns
+```{r}
+col0_low <- dplyr::select(col0.sites, mod_ratio.col0_low_1, mod_ratio.col0_low_2, mod_ratio.col0_low_3, mod_ratio.col0_low_4)
+col0_high <- dplyr::select(col0.sites, mod_ratio.col0_high_1, mod_ratio.col0_high_2, mod_ratio.col0_high_3, mod_ratio.col0_high_4)
+vir1_low <- dplyr::select(col0.sites,  mod_ratio.vir1_low_2, mod_ratio.vir1_low_3, mod_ratio.vir1_low_4)
+vir1_high <- dplyr::select(col0.sites, mod_ratio.vir1_high_1, mod_ratio.vir1_high_2, mod_ratio.vir1_high_3, mod_ratio.vir1_high_4)
+```
+Reshape the data frame
+```{r}
+df <- rbind(
+    data.frame(genotype="col0", temperature=17,melt(col0_low)),
+    data.frame(genotype="col0", temperature=27,melt(col0_high)),
+    data.frame(genotype="vir1", temperature=17,melt(vir1_low)),
+    data.frame(genotype="vir1", temperature=27,melt(vir1_high))
+)
+```
+```{r}
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+df <- df %>%
+    mutate(geno_temp = interaction(genotype, temperature, sep = "_"))
+
+m6a_plot <- ggplot(df, aes(x = value, colour = geno_temp))+
+    geom_line(stat= "density", linewidth = 0.3, aes(group = variable, alpha = 0.01))+
+    geom_density(linetype = "longdash", linewidth = 1, aes(group = paste(genotype, temperature)))+
+    theme_classic(base_size=12)+
+    labs(colour = "Genotype", fill = "Condition")+
+    scale_color_manual(values = custom_colors)+
+    labs(x = "Predicted Modification Ratio",
+       y = "Density")+
+    guides(
+        alpha = "none", 
+        colour = guide_legend(override.aes = list(linetype = "solid"))
+    )
+m6a_plot
+```
+
+Sites which still have an predicted m6A site in vir1
+```{r}
+col0_low <- dplyr::select(vir1.sites, mod_ratio.col0_low_1, mod_ratio.col0_low_2, mod_ratio.col0_low_3, mod_ratio.col0_low_4)
+col0_high <- dplyr::select(vir1.sites, mod_ratio.col0_high_1, mod_ratio.col0_high_2, mod_ratio.col0_high_3, mod_ratio.col0_high_4)
+vir1_low <- dplyr::select(vir1.sites,  mod_ratio.vir1_low_2, mod_ratio.vir1_low_3, mod_ratio.vir1_low_4)
+vir1_high <- dplyr::select(vir1.sites, mod_ratio.vir1_high_1, mod_ratio.vir1_high_2, mod_ratio.vir1_high_3, mod_ratio.vir1_high_4)
+```
+Reshape the data frame
+```{r}
+df2 <- rbind(
+    data.frame(genotype="col0", temperature=17,melt(col0_low)),
+    data.frame(genotype="col0", temperature=27,melt(col0_high)),
+    data.frame(genotype="vir1", temperature=17,melt(vir1_low)),
+    data.frame(genotype="vir1", temperature=27,melt(vir1_high))
+)
+```
+```{r}
+# Define custom colors for each combination of genotype and temperature
+custom_colors <- c(
+    "col0_17" = "#009E73",  
+    "col0_27" = "#E69F00",  
+    "vir1_17" = "#0072B2", 
+    "vir1_27" = "#D55E00"   
+)
+# Create a new variable for interaction of genotype and temperature
+df2 <- df2 %>%
+    mutate(geno_temp = interaction(genotype, temperature, sep = "_"))
+
+m6a_plot_vir1 <- ggplot(df2, aes(x = value, colour = geno_temp))+
+    geom_line(stat= "density", linewidth = 0.3, aes(group = variable, alpha = 0.01))+
+    geom_density(linetype = "longdash", linewidth = 1, aes(group = paste(genotype, temperature)))+
+    theme_classic(base_size=12)+
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(colour = "Genotype", fill = "Condition")+
+    scale_color_manual(values = custom_colors)+
+    labs(x = "Predicted Modification Ratio",
+       y = "Density")+
+    guides(
+        alpha = "none", 
+        colour = guide_legend(override.aes = list(linetype = "solid"))
+    )
+m6a_plot_vir1
+```
+
+Plot Yanocomp results 
+```{r}
+bed_header <- c("chrom","start","end","gene_id:kmer","score","strand",
+                "modLogFC","Pval","FDR","Mod", "G",
+                "HomG", "PairwisePval", "PairwiseFDR","UnModDisMean","UnModDisSD",
+                "ModDisMean", "ModDisSD", "KS")
+
+yanocomp_results_high <- read.delim("~/Documents/NovDem/Yanocomp/vir1_high_vs_col0_high.bed", header=FALSE)
+yanocomp_results_low <- read.delim("~/Documents/NovDem/Yanocomp/vir1_low_vs_col0_low.bed", header=FALSE)
+```
+
+
+```{r}
+colnames(yanocomp_results_high) <- colnames(yanocomp_results_low) <- bed_header
+```
+
+Filter the tables
+```{r}
+yanocomp_results_high <- yanocomp_results_high %>% filter(FDR < 0.05)
+yanocomp_results_low <- yanocomp_results_low %>% filter(FDR < 0.05)
+```
+
+
+```{r}
+yanocomp_results_high <- yanocomp_results_high %>% 
+  separate(Mod, into = c("ModV", "ModC"), sep = ",", convert = TRUE)
+yanocomp_results_low <- yanocomp_results_low %>% 
+  separate(Mod, into = c("ModV", "ModC"), sep = ",", convert = TRUE)
+```
+```{r}
+yanocomp_plot <- ggplot()+
+    geom_density(data = yanocomp_results_high, aes(x = ModV), colour = "#D55E00")+
+    geom_density(data = yanocomp_results_low, aes(x = ModV), colour = "#0072B2")+
+    geom_density(data = yanocomp_results_high, aes(x = ModC), colour = "#E69F00")+
+    geom_density(data = yanocomp_results_low, aes(x = ModC), colour = "#009E73")+
+    theme_classic(base_size=12)+
+    labs(x = "Predicted Modification Ratio",
+       y = "Density")
+    
+yanocomp_plot
+```
