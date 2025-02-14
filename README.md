@@ -24,7 +24,9 @@
 
 - LCMSMS.Rmd
 
-  Plot the LC-MS/MS results
+- m6a_stoichiometry.Rmd
+
+  Plot the results of m6a modification prediction using m6anet and yanocomp
 
 - polya_site_choice.Rmd
 
