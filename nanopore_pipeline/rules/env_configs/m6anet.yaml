@@ -1,0 +1,25 @@
+name: m6anet
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8.5=h1103e12_7_cpython
+  - pip=20.2.3=py_0
+  - numpy
+  - scipy=1.5.2=py38h8c5af15_0
+  - pandas
+  - numexpr=2.7.3
+  - statsmodels
+  - pomegranate=0.13.3=py38hbf85e49_0
+  - scikit-learn=0.23.2=py38hee58b96_0
+  - joblib=0.17.0=py_0
+  - h5py
+  - hdf5=1.10.6=nompi_h3c11f04_101
+  - click=7.1.2=pyh9f0ad1d_0
+  - intervaltree>=3.0.0
+  - matplotlib>=2.2
+  - numba>=0.52.0
+  - pysam>=0.15.3
+  - patsy>=0.5.2
+  - pip:
+     - click_log
+     - m6anet
