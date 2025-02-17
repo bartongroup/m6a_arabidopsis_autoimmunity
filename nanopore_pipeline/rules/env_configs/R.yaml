@@ -1,0 +1,14 @@
+name: R
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - R
+ - r-essentials
+ - r-argparse
+ - r-readr
+ - r-statmod
+ - bioconductor-genomicfeatures
+ - bioconductor-deseq2
+ - bioconductor-tximport
+ - bioconductor-edgeR
